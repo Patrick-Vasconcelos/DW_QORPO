@@ -3,10 +3,12 @@ from dotenv import load_dotenv
 from os import getenv
 
 
-env = load_dotenv(r'C:\Users\USER\.env')
+env = load_dotenv(r'C:\Users\USER\.env.txt')
 
 usuario_dw = getenv('usuario_DW')
 senha_dw = getenv('senha_DW')
+
+
 
 conexao, cursor = dw_qorpo.conecta_ao_banco(username=usuario_dw,password=senha_dw)
 
@@ -21,7 +23,8 @@ sql1 = """SELECT
 	--- exame.CodMedico,
 	medico.Nome as Solicitante,
 	exame.Tipo,
-	exame.Descr
+	exame.Descr,
+    exame.Indicacao
 	
 	FROM SISAC.dbo.SolicExa as exame
 	LEFT JOIN SISAC.dbo.CadPaciente paciente on exame.CodPacRef = paciente.CodPaciente
