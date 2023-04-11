@@ -10,20 +10,27 @@ senha_dw = getenv('senha_DW')
 
 conexao, cursor = dw_qorpo.conecta_ao_banco(username=usuario_dw,password=senha_dw)
 
-sql1 = """SELECT 
-	-- exame.CodPacRef as CodPaciente,
+sql1 = """SELECT
+	--- exame.NSolic,
 	exame.DataSist as DataIndicacao,
+	--- exame.CodPacRef as CodPaciente,
 	paciente.Paciente,
+    paciente.Telefone2,
 	paciente.Sexo,
 	paciente.DataNasc,
-	medico.Nome as Solicitante
+	--- exame.CodMedico,
+	medico.Nome as Solicitante,
+	exame.Tipo,
+	exame.Descr
 	
 	FROM SISAC.dbo.SolicExa as exame
 	LEFT JOIN SISAC.dbo.CadPaciente paciente on exame.CodPacRef = paciente.CodPaciente
 	LEFT JOIN SISAC.dbo.CadMedico medico on exame.CodMedico = medico.CodMedico
 
-	WHERE exame.Descr = 'Fisioterapia'
+	WHERE exame.Descr = 'Fisioterapia' AND exame.DataSist BETWEEN '2023-10-04' AND '2023-11-04'
+
 	ORDER BY exame.DataSist
+
 	"""
 
 sql2 = """SELECT  CodAmb,Descr,CH,Grupo FROM SISAC.dbo.TabAMB
@@ -31,7 +38,7 @@ sql2 = """SELECT  CodAmb,Descr,CH,Grupo FROM SISAC.dbo.TabAMB
 	ORDER BY Grupo DESC
 	"""
 
-sql = """WITH cte_fatura as (
+sql3 = """WITH cte_fatura as (
 	SELECT
 		LEFT(fatura.CodPaciente, 6) as CodPaciente,
 		fatura.CodTaxa,
@@ -75,8 +82,21 @@ sql = """WITH cte_fatura as (
 	ORDER BY paciente
 	"""
 
-consulta = dw_qorpo.consulta_ao_banco(query=sql,conexao=conexao)
 
-dw_qorpo.salvar_em_excel(nome_arquivo='faturados',consulta=consulta)
+sql =  """SELECT 
+	medico.CodMedico,
+	medico.Nome,
+	medico.Especialidade,
+	medico.Crm1,
+	medico.CRM
+
+FROM SISAC.dbo.CadMedico as medico
+ORDER BY medico.Especialidade
+
+"""
+
+consulta = dw_qorpo.consulta_ao_banco(query=sql1,conexao=conexao)
+
+dw_qorpo.salvar_em_excel(nome_arquivo='indicacoes_fisioterapia-10-04',consulta=consulta)
 
 conexao.close()
