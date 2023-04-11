@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from os import getenv
 
 
-env = load_dotenv(r'C:\Users\Qorpo\.env')
+env = load_dotenv(r'C:\Users\USER\.env')
 
 usuario_dw = getenv('usuario_DW')
 senha_dw = getenv('senha_DW')

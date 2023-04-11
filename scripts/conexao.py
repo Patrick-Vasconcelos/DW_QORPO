@@ -3,7 +3,7 @@ import pandas.io.sql as psql
 
 
 class dw_qorpo():
-    def conecta_ao_banco(driver= 'ODBC Driver 18 for SQL Server', server= 'SRV-002', database = 'SISAC', username=None,password=None,trusted_connection='no'):
+    def conecta_ao_banco(driver= 'ODBC Driver 17 for SQL Server', server= '192.168.10.63', database = 'SISAC', username=None,password=None,trusted_connection='no'):
 
         string_conexao = f"DRIVER={driver};SERVER={server};DATABASE={database};ENCRYPT=no;UID={username};PWD={password};TRUSTED_CONNECTION={trusted_connection}"
         
