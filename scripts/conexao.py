@@ -2,6 +2,12 @@ import pyodbc
 import pandas.io.sql as psql
 
 
+
+def import_query(path):
+    with open(path, 'r') as open_file:
+        return open_file.read() 
+
+
 class dw_qorpo():
     def conecta_ao_banco(driver= 'ODBC Driver 17 for SQL Server', server= '192.168.10.63', database = 'SISAC', username=None,password=None,trusted_connection='no'):
 
@@ -13,6 +19,8 @@ class dw_qorpo():
         return conexao, cursor
 
     def consulta_ao_banco(query,conexao):
+
+        query = import_query(f'scripts/{query}.sql')
 
         df = psql.read_sql(query,conexao)
 
