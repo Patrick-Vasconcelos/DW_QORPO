@@ -29,4 +29,4 @@ LEFT JOIN sisac.dbo.CadPaciente as paciente ON cte_fatura.CodPaciente= paciente.
 LEFT JOIN sisac.dbo.CadMedico as medico ON cte_fatura.CodMedico = medico.CodMedico
 LEFT JOIN sisac.dbo.CadConvenio as convenio ON paciente.CodConvenio = convenio.CodConvenio
 
-WHERE cte_fatura.Data > '2023-01-04'
+WHERE cte_fatura.Data >= '2023-01-07'

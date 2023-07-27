@@ -20,13 +20,13 @@ class dw_qorpo():
 
     def consulta_ao_banco(query,conexao):
 
-        query = import_query(f'scripts/{query}.sql')
+        query = import_query(f'querys/{query}.sql')
 
         df = psql.read_sql(query,conexao)
 
         return df
 
-    def salvar_em_excel(consulta, nome_arquivo='consulta'):
+    def salvar_em_excel(consulta, nome_arquivo='consulta', path = 'docs/'):
 
-        consulta.to_excel(f"docs/{nome_arquivo}.xlsx", index=False)
+        consulta.to_excel(f"{path}{nome_arquivo}.xlsx", index=False)
 
