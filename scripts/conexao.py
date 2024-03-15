@@ -49,7 +49,6 @@ class dw_qorpo():
 
     def salvar_em_excel(self,consulta, nome_arquivo='consulta', path = 'docs/'):
         
-        
         with pd.ExcelWriter(f"{path}{nome_arquivo}.xlsx", engine='xlsxwriter', options={'encoding': 'utf-8'}) as writer:
             consulta.to_excel(writer, index=False)
 
