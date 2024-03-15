@@ -7,7 +7,7 @@ WITH cte_fatura as(
 		fatura.Usuario,
 		fatura.CodMedico
 	FROM sisac.dbo.fatura as fatura
-WHERE codTaxa Like '1111%' AND Descr LIKe 'avali%' AND Data >= '2023-26-07'
+WHERE codTaxa Like '1111%' AND Descr LIKe 'avali%' AND Data >= '2023-16-08'
 )
 SELECT
 	paciente.Paciente,

@@ -1,20 +1,23 @@
 from conexao import dw_qorpo
 from dotenv import load_dotenv
 from os import getenv
+import time
+import warnings
 
 
-env = load_dotenv(r'C:\Users\USER\.env.txt')
+if __name__ == "__main__":
+    warnings.filterwarnings("ignore")
+    load_dotenv(r'C:\Users\patri\.env.txt')
+    
+    usuario_dw = getenv('usuario_DW')
+    senha_dw = getenv('senha_DW')
+    host_dw = getenv('host_DW')
+    banco_dw = getenv('banco_DW') 
+   
+    dw = dw_qorpo(usuario=usuario_dw, senha=senha_dw,host=host_dw,banco=banco_dw)
 
-usuario_dw = getenv('usuario_DW')
-senha_dw = getenv('senha_DW')
+    conexao, cursor = dw.conecta_ao_banco()
+    dw.salva_multiplos_excel(conexao=conexao)
+    dw.envia_multiplos_emails()
 
-
-nome = 'pacotes'
-
-conexao, cursor = dw_qorpo.conecta_ao_banco(username=usuario_dw,password=senha_dw)
-
-consulta = dw_qorpo.consulta_ao_banco(query=nome,conexao=conexao)
-
-dw_qorpo.salvar_em_excel(nome_arquivo=nome,consulta=consulta,path='docs/relatorios diarios/')
-
-conexao.close()
+    conexao.close()

@@ -8,5 +8,5 @@ SELECT medico.Nome, DataHora,agenda.Nome as Paciente, agenda.Usuario, agenda.cod
 
 FROM sisac.dbo.Agenda as agenda
 LEFT JOIN sisac.dbo.CadMedico as medico ON agenda.CodMedico = medico.CodMedico
-WHERE agenda.Tipo LIKE 'FISIO%' AND agenda.CodMedico = 170  AND MONTH(DataHora) = (MONTH(GETDATE()) - 1)
-ORDER BY agenda.CodMedico, DataHora
+WHERE agenda.Tipo LIKE 'FISIO%' AND agenda.CodMedico IN ( 167,168, 175, 186)  AND MONTH(DataHora) = (MONTH(GETDATE()) - 1)
+ORDER BY agenda.CodMedico, DataHora  

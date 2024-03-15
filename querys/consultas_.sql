@@ -1,0 +1,8 @@
+SELECT * FROM sisac.dbo.Entrada
+WHERE codAmb like '10101012' AND LoteEnt NOT LIKE 'INAT' AND CodMovimento IN ('102119.03',
+'103264.01',
+'017093.06',
+'048234.04',
+'023368.02',
+'103263.01')
+ORDER BY DataHoraAgd

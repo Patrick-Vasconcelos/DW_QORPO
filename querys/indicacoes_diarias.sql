@@ -15,7 +15,7 @@ FROM SISAC.dbo.SolicExa as exame
 LEFT JOIN SISAC.dbo.CadPaciente paciente on exame.CodPacRef = paciente.CodPaciente
 LEFT JOIN SISAC.dbo.CadMedico medico on exame.CodMedico = medico.CodMedico
 
-WHERE exame.Descr LIKE 'Fisio%' AND exame.DataSist >= '2023-26-07'
+WHERE exame.Descr LIKE 'Fisio%' AND exame.DataSist >= '2023-16-08'
 
 
 ORDER BY exame.DataSist
