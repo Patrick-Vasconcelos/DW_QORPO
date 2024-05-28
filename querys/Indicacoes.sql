@@ -16,6 +16,6 @@ SELECT
 	LEFT JOIN SISAC.dbo.CadPaciente paciente on exame.CodPacRef = paciente.CodPaciente
 	LEFT JOIN SISAC.dbo.CadMedico medico on exame.CodMedico = medico.CodMedico
 
-	WHERE exame.Descr LIKE 'Fisioterapia%' AND exame.DataSist > '2023-20-07'
+	WHERE exame.Descr LIKE 'Fisioterapia%' AND exame.DataSist >= '2024-13-05'
 
 	ORDER BY exame.DataSist

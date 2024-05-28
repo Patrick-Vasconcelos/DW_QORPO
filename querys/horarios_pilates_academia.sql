@@ -18,7 +18,8 @@ SELECT
 	CodBanco
 
 FROM sisac.dbo.recebepart
-WHERE Hist LIKE 'SESS%INDI%' OR Hist LIKE 'PACOTE%' OR Hist LIKE 'AVALIA%' OR Hist LIKE 'PLANO%' OR Hist LIKE '%Bodytech%' OR Hist LIKE '%Centro de Treinamento%'
+--- WHERE Hist LIKE 'SESS%INDI%' OR Hist LIKE 'PACOTE%' OR Hist LIKE 'AVALIA%' OR Hist LIKE 'PLANO%' OR Hist LIKE '%Bodytech%' OR Hist LIKE '%Centro de Treinamento%'
+WHERE  Hist LIKE 'PLANO%' OR Hist LIKE '%Centro de Treinamento%'
 ) 
 
 SELECT
@@ -33,4 +34,5 @@ SELECT
 
 FROM Cte_recebe
 
-WHERE DataSist >= '2024-01-05'
+
+WHERE DataSist BETWEEN '2024-03-08' AND '2024-03-31'

@@ -8,6 +8,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 from dotenv import load_dotenv
 from os import getenv
+import datetime
 
 load_dotenv(r'C:\Users\patri\.env.txt')
 
@@ -23,12 +24,15 @@ class dw_qorpo():
         self.senha = senha
         self.host = host
         self.banco = banco
+        self.url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ__KgzzjYneQe-8taFViRNT183LScS8lJTTI1ONqPbrEXJa5OcQeCQThH7PS2yG6z_jlQixD5gaQe3/pub?gid=165409388&single=true&output=csv'
+
            
         self.destinatarios_arquivos = [
         ('patrickvasc@qorpo.com.br', ['pacotes_fisios_avaliacoes', 'adiantamentos_saldo'], 'Relatório para NF', 'Segue arquivo: '),
         ('89patrick89@gmail.com', ['a_pagar', 'a_receber'], 'Relatório Financeiro', 'Segue arquivo: ')
         ]
-        self.lista_nome = ['a_receber', 'a_pagar'] 
+        # self.lista_nome = ['financeiro_consulta', 'financeiro_estacionamento', 'financeiro_exames', 'financeiro_pqa', 'financeiro_pilates']
+        self.lista_nome = ['adiantamentos_saldo', 'pacotes_fisios_avaliacoes', 'notas_fiscais', 'repasse', 'a_pagar', 'indicacoes']
      
     def conecta_ao_banco(self, driver= 'ODBC Driver 17 for SQL Server',trusted_connection='no'):
 
@@ -70,7 +74,7 @@ class dw_qorpo():
         msg.attach(MIMEText(mensagem_corpo, 'plain'))
 
         attachment = open(path_excel, 'rb')
-        part = MIMEBase('application', 'octet-stream')
+        part = MIMEBase('application', 'vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         part.set_payload((attachment).read())
         encoders.encode_base64(part)
         part.add_header('Content-Disposition', f'attachment; filename= {nome_arquivo}')
@@ -105,3 +109,124 @@ class dw_qorpo():
             consulta = self.consulta_ao_banco(query=nome,conexao=conexao)
             self.salvar_em_excel(nome_arquivo=nome,consulta=consulta)
             time.sleep(1)
+    
+    def cria_plantoes(self):
+        print(f"criando tabela a partir da url {self.url}")
+        df = pd.read_csv(self.url)
+        df['Data Pagamento'] = pd.to_datetime(df['Data Pagamento'],format='%d/%m/%Y')
+        plantoes_sao_camilo, plantoes_mk = self.separa_plantoes(df=df)
+        plantoes_sao_camilo = self.acrescenta_horas_trabalhadas(plantoes_sao_camilo)
+        plantoes_mk = self.acrescenta_horas_trabalhadas(plantoes_mk)
+        print("horas trabalhadas acrescentadas")
+        plantoes_sao_camilo['Valor'] = plantoes_sao_camilo.apply(self.calcular_valor, axis=1)
+        plantoes_mk['Valor'] = plantoes_mk.apply(self.calcular_valor, axis=1)
+        print("valores acrescentadas")
+
+        
+
+        return plantoes_sao_camilo,plantoes_mk
+
+    def salva_excel_plantao(self, plantoes_sao_camilo, plantoes_mk):
+        print("criando tabelas dos plantoes..")
+
+        plantoes_sao_camilo = plantoes_sao_camilo[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital', 'Data Pagamento', 'Valor']]
+        plantoes_mk = plantoes_mk[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital','Data Pagamento', 'Valor']]
+
+        print("tabelas criadas ..")
+        plantoes_sao_camilo.to_excel("docs/plantoes_sao_camilo.xlsx",index=False)
+        plantoes_mk.to_excel("docs/plantoes_mk.xlsx", index=False)
+
+    def acrescenta_horas_trabalhadas(self,df):
+        url_cadmedico = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ__KgzzjYneQe-8taFViRNT183LScS8lJTTI1ONqPbrEXJa5OcQeCQThH7PS2yG6z_jlQixD5gaQe3/pub?gid=1249023783&single=true&output=csv'
+
+        df_cadmedico = pd.read_csv(url_cadmedico)
+        df_cadmedico = df_cadmedico[['Nome', 'email']]
+        df_cadmedico.columns = ['Nome Completo', 'email']
+
+
+        df['Dia do Plantão'] = pd.to_datetime(df['Dia do Plantão'], format='%d/%m/%Y')
+        df['Inicio'] = pd.to_datetime(df['Dia do Plantão'].astype(str) + ' ' + df['Horário de Início do Plantão'])
+        df['Fim'] = pd.to_datetime(df['Dia do Plantão'].astype(str) + ' ' + df['Horário de Fim do Plantão'])
+
+        df['Horas'] = (df['Fim'] - df['Inicio']).dt.total_seconds() / 3600
+        df.loc[df['Fim'] < df['Inicio'], 'Horas'] += 24
+        df['Mes'] = df['Dia do Plantão'].dt.to_period('M')
+
+        horas_trabalhadas = df.groupby(['Nome Completo', 'Mes'])['Horas'].sum().reset_index()
+        horas_trabalhadas.columns = ['Nome Completo', 'Mes', 'Horas_Trabalhadas']
+
+        df = df.merge(horas_trabalhadas, on=['Nome Completo', 'Mes'])
+        df = pd.merge(df, df_cadmedico, on='Nome Completo')
+
+        return df
+    
+    def separa_plantoes(self, df):
+        
+        filtro_mk = df['Hospital'] == 'Monte Klinikum'
+        plantoes_mk = df[filtro_mk]
+        plantoes_mk = plantoes_mk[['Nome Completo', 'Dia do Plantão',
+                                'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital',
+                                    'Data Pagamento']]
+
+        filtro_sao_camilo = df['Hospital'] == 'São Camilo'
+        plantoes_sao_camilo = df[filtro_sao_camilo]
+        plantoes_sao_camilo = plantoes_sao_camilo[['Nome Completo', 'Dia do Plantão',
+                                                'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital',
+                                                    'Data Pagamento']]
+        
+        return plantoes_sao_camilo,plantoes_mk
+
+    def envia_email_plantao(self, Data_pagamento):
+        self.data_pagamento = pd.to_datetime(Data_pagamento, format='%d/%m/%Y')
+
+        plantoes_sao_camilo, plantoes_mk = self.cria_plantoes()
+
+        plantoes_sao_camilo = plantoes_sao_camilo[plantoes_sao_camilo['Data Pagamento'] == self.data_pagamento]
+        plantoes_mk = plantoes_mk[plantoes_mk['Data Pagamento'] == self.data_pagamento]
+        
+
+        self.salva_excel_plantao(plantoes_sao_camilo=plantoes_sao_camilo, plantoes_mk=plantoes_mk)
+
+        plantoes = pd.concat([plantoes_sao_camilo, plantoes_mk], ignore_index=True)
+
+        grupo_medicos = plantoes.groupby('Nome Completo')
+
+
+    def calcular_valor(self,row):
+        hospital = row['Hospital']
+        dia = row['Dia do Plantão']
+        dia_semana = dia.weekday()
+        horas_trabalhadas = row['Horas_Trabalhadas']
+        horas = row['Horas']
+
+        if hospital == 'São Camilo':
+            if horas_trabalhadas >= 96:
+                if horas == 6:
+                    return 625
+                else:
+                    return 1250
+
+            else:
+                if horas == 6:
+                    if dia_semana <5:
+                        return 450
+                    else:
+                        return 625
+                else:
+                    if dia_semana <5:
+                        return 900
+                    else:
+                        return 1250
+
+        else:
+            if horas == 12:
+                if dia_semana < 4:
+                    return 1000
+                else:
+                    return 1100
+                    
+            else:
+                if dia_semana < 5:
+                    return 450
+                else:
+                    return 550

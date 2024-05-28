@@ -7,7 +7,7 @@ import warnings
 
 if __name__ == "__main__":
     warnings.filterwarnings("ignore")
-    load_dotenv(r'C:\Users\patri\.env.txt')
+    load_dotenv(r'C:\Users\USER\.env.txt')
     
     usuario_dw = getenv('usuario_DW')
     senha_dw = getenv('senha_DW')
@@ -17,7 +17,8 @@ if __name__ == "__main__":
     dw = dw_qorpo(usuario=usuario_dw, senha=senha_dw,host=host_dw,banco=banco_dw)
 
     conexao, cursor = dw.conecta_ao_banco()
-    dw.salva_multiplos_excel(conexao=conexao)
-    dw.envia_multiplos_emails()
+    # dw.salva_multiplos_excel(conexao=conexao)
+    dw.envia_email_plantao(Data_pagamento='27/05/2024')
+    # dw.envia_multiplos_emails()
 
     conexao.close()

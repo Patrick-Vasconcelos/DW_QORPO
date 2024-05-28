@@ -32,7 +32,8 @@ SELECT
 	
 FROM cte_recebe
 
-WHERE DataSist >='2024-03-08'
+-- WHERE DataSist >='2024-03-18'
+WHERE DataSist >= '2024-01-05'
 
 GROUP BY DataSist,CodPaciente, NomePaciente, Obs, Usuario
 
