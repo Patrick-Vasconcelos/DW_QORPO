@@ -126,7 +126,7 @@ grupo_medicos = plantoes.groupby(['Nome Completo','Hospital'])
 
 smtp_server = 'smtp.gmail.com'
 smtp_port = 587
-sender_email = 'financeiro.qorpo@gmail.com'
+sender_email = 'faturamento.qorpo@gmail.com'
 sender_password = 'zkofkrpkeymehzca'
 
 
@@ -154,20 +154,46 @@ def enviar_email(destinatario, subject, body):
 for (medico,hospital) , dados in grupo_medicos:
     email_medico = dados['email'].iloc[0]
     data_pagamento_ = dados['Data Pagamento'].dt.strftime('%d/%m/%Y').iloc[0]
-    dados = dados[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital', 'Data Pagamento', 'Valor']]
+    horas_totais = int(dados['Horas_Trabalhadas'].iloc[0])
+    dados = dados[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão','Horas' , 'Hospital', 'Data Pagamento', 'Valor']]
+    valor_receber = dados['Valor'].sum()
     dados['Dia do Plantão'] = dados['Dia do Plantão'].dt.strftime('%d/%m/%Y')
     dados['Data Pagamento'] = dados['Data Pagamento'].dt.strftime('%d/%m/%Y')
     tabela_plantao = dados.to_html(index=False)
+
+
     assunto = f'Informações de Plantões - {medico} - {hospital}'
     corpo_email = f"""
     <html>
     <head></head>
     <body>
     <p>Olá {medico},</p>
-    <p>Aqui estão os seus plantões pagos na data {data_pagamento_} pelo o {hospital}:</p>
+    <p>Aqui está o demonstrativo de plantões realizados no Hospital {hospital}, pagos na data {data_pagamento_}, totalizando {horas_totais} horas trabalhadas.</p>
+    <p>Valor total = R${valor_receber}:</p>
     {tabela_plantao}
     </body>
     </html>
     """
     enviar_email(email_medico, assunto, corpo_email)
     
+
+
+
+
+#%%
+
+for (medico,hospital) , dados in grupo_medicos:
+    print(dados['Horas_Trabalhadas'].iloc[0])
+
+#%%
+grupo_medicos['Valor'].sum()
+
+
+#%%
+
+grupo_medicos.head()
+# %%
+
+plantoes_sao_camilo['Valor'].sum()
+
+# %%

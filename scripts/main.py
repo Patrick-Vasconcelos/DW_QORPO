@@ -1,4 +1,5 @@
 from conexao import dw_qorpo
+from conexao import calculador_plantoes
 from dotenv import load_dotenv
 from os import getenv
 import time
@@ -13,12 +14,14 @@ if __name__ == "__main__":
     senha_dw = getenv('senha_DW')
     host_dw = getenv('host_DW')
     banco_dw = getenv('banco_DW') 
+
+    # CP = calculador_plantoes()
+    # CP.envia_demonstrativos(Data_pagamento='27/05/2024')
+
    
     dw = dw_qorpo(usuario=usuario_dw, senha=senha_dw,host=host_dw,banco=banco_dw)
-
     conexao, cursor = dw.conecta_ao_banco()
-    # dw.salva_multiplos_excel(conexao=conexao)
-    dw.envia_email_plantao(Data_pagamento='27/05/2024')
+    dw.salva_multiplos_excel(conexao=conexao)
     # dw.envia_multiplos_emails()
-
     conexao.close()
+

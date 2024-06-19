@@ -24,7 +24,7 @@ class dw_qorpo():
         self.senha = senha
         self.host = host
         self.banco = banco
-        self.url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ__KgzzjYneQe-8taFViRNT183LScS8lJTTI1ONqPbrEXJa5OcQeCQThH7PS2yG6z_jlQixD5gaQe3/pub?gid=165409388&single=true&output=csv'
+        
 
            
         self.destinatarios_arquivos = [
@@ -32,7 +32,9 @@ class dw_qorpo():
         ('89patrick89@gmail.com', ['a_pagar', 'a_receber'], 'Relatório Financeiro', 'Segue arquivo: ')
         ]
         # self.lista_nome = ['financeiro_consulta', 'financeiro_estacionamento', 'financeiro_exames', 'financeiro_pqa', 'financeiro_pilates']
-        self.lista_nome = ['adiantamentos_saldo', 'pacotes_fisios_avaliacoes', 'notas_fiscais', 'repasse', 'a_pagar', 'indicacoes']
+        self.lista_nome = ['repasse']
+        # self.lista_nome = ['Agendas_socios']
+        # self.lista_nome = ['a_pagar']
      
     def conecta_ao_banco(self, driver= 'ODBC Driver 17 for SQL Server',trusted_connection='no'):
 
@@ -110,36 +112,48 @@ class dw_qorpo():
             self.salvar_em_excel(nome_arquivo=nome,consulta=consulta)
             time.sleep(1)
     
+
+class calculador_plantoes():
+
+    def __init__(self) -> None:
+        self.url_cadmedico = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ__KgzzjYneQe-8taFViRNT183LScS8lJTTI1ONqPbrEXJa5OcQeCQThH7PS2yG6z_jlQixD5gaQe3/pub?gid=1249023783&single=true&output=csv'
+        self.url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ__KgzzjYneQe-8taFViRNT183LScS8lJTTI1ONqPbrEXJa5OcQeCQThH7PS2yG6z_jlQixD5gaQe3/pub?gid=165409388&single=true&output=csv'
+        self.sender_email = 'faturamento.qorpo@gmail.com'
+        self.sender_password = getenv('senha_webmail_plantao')
+
     def cria_plantoes(self):
-        print(f"criando tabela a partir da url {self.url}")
+        
         df = pd.read_csv(self.url)
         df['Data Pagamento'] = pd.to_datetime(df['Data Pagamento'],format='%d/%m/%Y')
-        plantoes_sao_camilo, plantoes_mk = self.separa_plantoes(df=df)
-        plantoes_sao_camilo = self.acrescenta_horas_trabalhadas(plantoes_sao_camilo)
-        plantoes_mk = self.acrescenta_horas_trabalhadas(plantoes_mk)
-        print("horas trabalhadas acrescentadas")
-        plantoes_sao_camilo['Valor'] = plantoes_sao_camilo.apply(self.calcular_valor, axis=1)
-        plantoes_mk['Valor'] = plantoes_mk.apply(self.calcular_valor, axis=1)
-        print("valores acrescentadas")
 
-        
+        plantoes_sao_camilo, plantoes_mk = self.separa_plantoes(df=df)
+        print("acrescentando horas trabalhadas")
+        try:
+            plantoes_sao_camilo = self.acrescenta_horas_trabalhadas(plantoes_sao_camilo)
+            plantoes_mk = self.acrescenta_horas_trabalhadas(plantoes_mk)
+        except Exception as e:
+            print("erro ao acrescentar horarios")
+
+        print("acrescentando valores dos plantoes")
+        try:
+            plantoes_sao_camilo['Valor'] = plantoes_sao_camilo.apply(self.calcular_valor, axis=1)
+            plantoes_mk['Valor'] = plantoes_mk.apply(self.calcular_valor, axis=1)
+        except Exception as e:
+            print("erro ao acrescentar os valores dos plantoes")
 
         return plantoes_sao_camilo,plantoes_mk
 
     def salva_excel_plantao(self, plantoes_sao_camilo, plantoes_mk):
-        print("criando tabelas dos plantoes..")
 
-        plantoes_sao_camilo = plantoes_sao_camilo[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital', 'Data Pagamento', 'Valor']]
-        plantoes_mk = plantoes_mk[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão', 'Hospital','Data Pagamento', 'Valor']]
+        plantoes_sao_camilo = plantoes_sao_camilo[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão','Horas', 'Hospital', 'Data Pagamento', 'Valor']]
+        plantoes_mk = plantoes_mk[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão','Horas', 'Hospital','Data Pagamento', 'Valor']]
 
-        print("tabelas criadas ..")
         plantoes_sao_camilo.to_excel("docs/plantoes_sao_camilo.xlsx",index=False)
         plantoes_mk.to_excel("docs/plantoes_mk.xlsx", index=False)
 
     def acrescenta_horas_trabalhadas(self,df):
-        url_cadmedico = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ__KgzzjYneQe-8taFViRNT183LScS8lJTTI1ONqPbrEXJa5OcQeCQThH7PS2yG6z_jlQixD5gaQe3/pub?gid=1249023783&single=true&output=csv'
-
-        df_cadmedico = pd.read_csv(url_cadmedico)
+    
+        df_cadmedico = pd.read_csv(self.url_cadmedico)
         df_cadmedico = df_cadmedico[['Nome', 'email']]
         df_cadmedico.columns = ['Nome Completo', 'email']
 
@@ -176,21 +190,55 @@ class dw_qorpo():
         
         return plantoes_sao_camilo,plantoes_mk
 
-    def envia_email_plantao(self, Data_pagamento):
+    def envia_demonstrativos(self, Data_pagamento):
+
         self.data_pagamento = pd.to_datetime(Data_pagamento, format='%d/%m/%Y')
 
-        plantoes_sao_camilo, plantoes_mk = self.cria_plantoes()
+        try:
+            print("criando tabela de plantoes...")
+            plantoes_sao_camilo, plantoes_mk = self.cria_plantoes()
+        except Exception as e:
+            print(f"erro ao criar tabelas :{e}")
+
+
 
         plantoes_sao_camilo = plantoes_sao_camilo[plantoes_sao_camilo['Data Pagamento'] == self.data_pagamento]
         plantoes_mk = plantoes_mk[plantoes_mk['Data Pagamento'] == self.data_pagamento]
+
+        print("salvando tabelas em excel")
+        try:
+            self.salva_excel_plantao(plantoes_sao_camilo=plantoes_sao_camilo, plantoes_mk=plantoes_mk)
+        except Exception as e:
+            print(f"falha ao salvar excel {e}")
+
         
-
-        self.salva_excel_plantao(plantoes_sao_camilo=plantoes_sao_camilo, plantoes_mk=plantoes_mk)
-
         plantoes = pd.concat([plantoes_sao_camilo, plantoes_mk], ignore_index=True)
 
-        grupo_medicos = plantoes.groupby('Nome Completo')
+        grupo_medicos = plantoes.groupby(['Nome Completo','Hospital'])
 
+        for (medico,hospital) , dados in grupo_medicos:
+            email_medico = dados['email'].iloc[0]
+            data_pagamento_ = dados['Data Pagamento'].dt.strftime('%d/%m/%Y').iloc[0]
+            horas_totais = int(dados['Horas_Trabalhadas'].iloc[0])
+            dados = dados[['Nome Completo', 'Dia do Plantão', 'Horário de Início do Plantão', 'Horário de Fim do Plantão','Horas' , 'Hospital', 'Data Pagamento', 'Valor']]
+            valor_receber = dados['Valor'].sum()
+            dados['Dia do Plantão'] = dados['Dia do Plantão'].dt.strftime('%d/%m/%Y')
+            dados['Data Pagamento'] = dados['Data Pagamento'].dt.strftime('%d/%m/%Y')
+            tabela_plantao = dados.to_html(index=False)
+
+            assunto = f'Informações de Plantões - {medico} - {hospital}'
+            corpo_email = f"""
+            <html>
+            <head></head>
+            <body>
+            <p>Olá {medico},</p>
+            <p>Aqui está o demonstrativo de plantões realizados no Hospital {hospital}, pagos na data {data_pagamento_}, totalizando {horas_totais} horas trabalhadas.</p>
+            <p>Valor total = R${valor_receber}:</p>
+            {tabela_plantao}
+            </body>
+            </html>
+            """
+            self.enviar_email(email_medico, assunto, corpo_email)
 
     def calcular_valor(self,row):
         hospital = row['Hospital']
@@ -230,3 +278,22 @@ class dw_qorpo():
                     return 450
                 else:
                     return 550
+
+    def enviar_email(self,destinatario, subject, body):
+        smtp_server = 'smtp.gmail.com'
+        smtp_port = 587
+        msg = MIMEMultipart()
+        msg['From'] = self.sender_email
+        msg['To'] = destinatario
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'html'))
+
+        try:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+            server.login(self.sender_email, self.sender_password)
+            server.sendmail(self.sender_email, destinatario, msg.as_string())
+            server.quit()
+            print(f'Email enviado com sucesso para {destinatario}')
+        except Exception as e:
+            print(f'Erro ao enviar o email para {destinatario}: {e}')
